@@ -400,7 +400,7 @@ const ttApply=F=>{const mn=x=>{const [h,m]=x.split(':').map(Number);return h*60+
     P.src=F.id;P.color=F.color;P.start=F.start;P.end=F.end;P.total=mn(F.end)-mn(F.start);P.train=F.kind==='train';P.game=F.kind==='game';P.label=F.kind==='custom'?F.text.trim():'';P.place=F.place||'';P.rem=+F.rem||0;P.enote=F.note||'';n++}
   return n};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&view==='menu')render()});
-let regOpen='',regName='',regMail='',regMsg='';let setSel='',setPin='',setMsg='',setPids=null,impData=null,impMsg='',expTxt='',impTxt='';
+let regOpen='',regName='',regMail='',regMsg='',regKid='';let setSel='',setPin='',setMsg='',setPids=null,impData=null,impMsg='',expTxt='',impTxt='';
 const parseBackup=txt=>{try{const o=JSON.parse(txt),D=o&&o.S;if(!D||typeof D!=='object'||!D.team)throw 0;const np=(D.team.players||[]).length,nc=Object.keys(D.cal||{}).length,ne=(D.mine||[]).length;impData={S:D,n:np+' Spieler, '+nc+' Kalendertage, '+ne+' eigene Übungen'+(o.date?' · Sicherung vom '+new Date(o.date).toLocaleDateString('de-DE'):'')};impMsg=''}catch(e){impData=null;impMsg='Das ist keine gültige meinTEAM-Sicherung.'}};
 const backupJson=()=>JSON.stringify({app:'meinTEAM',v:1,date:new Date().toISOString(),S});
 const PERM={player:['cal','plan','stat'],parent:['cal','stat']},ROLEL={trainer:'Trainer',player:'Spieler',parent:'Elternteil des Spielers'};
@@ -459,7 +459,7 @@ function render(){
   render0();
   const ro=r&&r!=='trainer';
   document.body.classList.toggle('ro',!!ro);
-  document.querySelectorAll('#main input,#main select,#main textarea,#club,#youth').forEach(e=>{e.disabled=!!ro&&e.id!=='acn'&&e.id!=='rgn'&&e.id!=='rgm'&&e.id!=='acpin'&&e.id!=='rsvwhy'});
+  document.querySelectorAll('#main input,#main select,#main textarea,#club,#youth').forEach(e=>{e.disabled=!!ro&&e.id!=='acn'&&e.id!=='rgn'&&e.id!=='rgk'&&e.id!=='rgm'&&e.id!=='acpin'&&e.id!=='rsvwhy'});
 }
 function render0(){
   injectForms();cancelAnimationFrame(raf);ensureIds();
@@ -473,7 +473,7 @@ function render0(){
   }else if(view==='set'){
     const cur=setSel||S.acct.role,first=!S.acct.role,needPin=!!(S.acct.pin&&S.acct.role&&S.acct.role!=='trainer'&&(cur!==S.acct.role||setPids));
     const RL=[['trainer','Trainer','Sieht und bearbeitet alles'],['player','Spieler','Sieht Kalender, Trainingstage und Statistik'],['parent','Elternteil des Spielers','Sieht Kalender und Statistik']];
-    m.innerHTML=`<h2 style="font-size:32px">${first?'Account anlegen':'Einstellungen'}</h2><p class="meta">${first?'Lege zuerst deinen Account an, um die App zu nutzen.':'Wer benutzt diese App?'}</p><h3>Ich bin …</h3>${RL.map(([k,l,t])=>`<button type="button" class="rolb${cur===k?' on':''}" data-role="${k}"><b>${l}</b></button>`).join('')}${cur!=='trainer'?`${cur==='parent'?'<h3>Mein Kind</h3>':''}${(S.team.players||[]).length?`<div class="ttwd">${S.team.players.map(q=>`<button type="button" class="${(setPids||S.acct.pids||[]).includes(q.id)?'on':''}" data-mypl="${q.id}">${esc(q.name)}</button>`).join('')}</div><p class="meta">${cur==='parent'?'Du kannst mehrere Kinder wählen.':''}</p>`:'<p class="meta">Sobald Spieler in der Mannschaft angelegt sind, kannst du sie hier auswählen.</p>'}`:''}${(cur==='trainer'||needPin)?`<input type="password" inputmode="numeric" id="acpin" maxlength="4" placeholder="${S.acct.pin?(S.acct.role==='trainer'?'Neue PIN (leer = behalten)':'Trainer-PIN eingeben'):'Trainer-PIN festlegen (optional, 4 Ziffern)'}" value="${esc(setPin)}" style="width:100%;margin:6px 0">`:''}${setMsg?`<p class="meta" style="color:#c0392b;font-weight:700">${esc(setMsg)}</p>`:''}<button class="cta" data-acctsave>Speichern</button>${regOpen?`<div class="regov"><div class="regbox"><h3 style="margin:0 0 4px">${esc(ROLEL[regOpen]||'')}</h3><p class="meta" style="margin:0 0 10px">Trage deinen Namen und deine E-Mail-Adresse ein.</p><input type="text" id="rgn" placeholder="Name" value="${esc(regName)}" autocomplete="name" style="width:100%;margin:4px 0"><input type="email" id="rgm" placeholder="E-Mail-Adresse" value="${esc(regMail)}" autocomplete="email" inputmode="email" style="width:100%;margin:4px 0">${regMsg?`<p class="meta" style="color:#c0392b;font-weight:700;margin:6px 0">${esc(regMsg)}</p>`:''}<button class="cta" data-regok style="margin-top:8px">Registrieren</button><button class="btn" data-regno style="width:100%;margin-top:6px">Abbrechen</button></div></div>`:''}`;
+    m.innerHTML=`<h2 style="font-size:32px">${first?'Account anlegen':'Einstellungen'}</h2><p class="meta">${first?'Lege zuerst deinen Account an, um die App zu nutzen.':'Wer benutzt diese App?'}</p><h3>Ich bin …</h3>${RL.map(([k,l,t])=>`<button type="button" class="rolb${cur===k?' on':''}" data-role="${k}"><b>${l}</b></button>`).join('')}${cur!=='trainer'?`${cur==='parent'?'<h3>Mein Kind</h3>':''}${(S.team.players||[]).length?`<div class="ttwd">${S.team.players.map(q=>`<button type="button" class="${(setPids||S.acct.pids||[]).includes(q.id)?'on':''}" data-mypl="${q.id}">${esc(q.name)}</button>`).join('')}</div><p class="meta">${cur==='parent'?'Du kannst mehrere Kinder wählen.':''}</p>`:'<p class="meta">Sobald Spieler in der Mannschaft angelegt sind, kannst du sie hier auswählen.</p>'}`:''}${(cur==='trainer'||needPin)?`<input type="password" inputmode="numeric" id="acpin" maxlength="4" placeholder="${S.acct.pin?(S.acct.role==='trainer'?'Neue PIN (leer = behalten)':'Trainer-PIN eingeben'):'Trainer-PIN festlegen (optional, 4 Ziffern)'}" value="${esc(setPin)}" style="width:100%;margin:6px 0">`:''}${setMsg?`<p class="meta" style="color:#c0392b;font-weight:700">${esc(setMsg)}</p>`:''}<button class="cta" data-acctsave>Speichern</button>${regOpen?`<div class="regov"><div class="regbox"><h3 style="margin:0 0 4px">${esc(ROLEL[regOpen]||'')}</h3><p class="meta" style="margin:0 0 10px">Trage deinen Namen und deine E-Mail-Adresse ein.</p><input type="text" id="rgn" placeholder="${regOpen==='trainer'?'Name des Trainers':regOpen==='player'?'Name des Spielers':'Name des Elternteils'}" value="${esc(regName)}" autocomplete="name" style="width:100%;margin:4px 0">${regOpen==='parent'?`<input type="text" id="rgk" placeholder="Name des Spielers" value="${esc(regKid)}" style="width:100%;margin:4px 0">`:''}<input type="email" id="rgm" placeholder="E-Mail-Adresse" value="${esc(regMail)}" autocomplete="email" inputmode="email" style="width:100%;margin:4px 0">${regMsg?`<p class="meta" style="color:#c0392b;font-weight:700;margin:6px 0">${esc(regMsg)}</p>`:''}<button class="cta" data-regok style="margin-top:8px">Registrieren</button><button class="btn" data-regno style="width:100%;margin-top:6px">Abbrechen</button></div></div>`:''}`;
   }else if(view==='tt'){
     const T=S.tt,F=ttf,H5=Array.from({length:24},(_,i)=>pad2(i)),M5=Array.from({length:12},(_,i)=>pad2(i*5));
     const sel=(id,arr,v)=>`<select id="${id}">${arr.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('')}</select>`;
@@ -629,10 +629,11 @@ document.addEventListener('click',ev=>{
     if(!P.rsvp[id])delete P.rsvp[id];save();render();return}
   if('regno' in d){regOpen='';regMsg='';render();return}
   if('regok' in d){const nm=regName.trim(),ml=regMail.trim();
-    if(!nm){regMsg='Bitte gib deinen Namen ein.';render();return}
+    if(!nm){regMsg=regOpen==='trainer'?'Bitte gib den Namen des Trainers ein.':regOpen==='player'?'Bitte gib den Namen des Spielers ein.':'Bitte gib den Namen des Elternteils ein.';render();return}
+    if(regOpen==='parent'&&!regKid.trim()){regMsg='Bitte gib den Namen des Spielers ein.';render();return}
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(ml)){regMsg='Bitte gib eine gültige E-Mail-Adresse ein.';render();return}
-    S.acct.name=nm;S.acct.email=ml;setSel=regOpen;regOpen='';regMsg='';setMsg='';save();render();return}
-  if('role' in d){regOpen=d.role;regName=S.acct.name||'';regMail=S.acct.email||'';regMsg='';render();return}
+    S.acct.name=nm;S.acct.email=ml;S.acct.kid=regOpen==='parent'?regKid.trim():'';setSel=regOpen;regOpen='';regMsg='';setMsg='';save();render();return}
+  if('role' in d){regOpen=d.role;regName=S.acct.name||'';regKid=S.acct.kid||'';regMail=S.acct.email||'';regMsg='';render();return}
   if('acctsave' in d){const a=S.acct,sel=setSel||a.role;
     if(!sel){setMsg='Bitte wähle deine Rolle.';render();return}
     let pids=(setPids||a.pids||[]).slice();if(sel==='player')pids=pids.slice(0,1);if(sel==='trainer')pids=[];
@@ -753,6 +754,7 @@ document.addEventListener('input',ev=>{if(ev.target.id==='nfname'){nfname=ev.tar
   if(ev.target.id==='impt'){impTxt=ev.target.value;return}
   if(ev.target.id==='acn'){S.acct.name=ev.target.value;save();return}
   if(ev.target.id==='rgn'){regName=ev.target.value;return}
+  if(ev.target.id==='rgk'){regKid=ev.target.value;return}
   if(ev.target.id==='rgm'){regMail=ev.target.value;return}
   if(ev.target.id==='acpin'){setPin=ev.target.value.replace(/\D/g,'').slice(0,4);ev.target.value=setPin;return}
   if(ev.target.id==='club'){S.team.name=ev.target.value;save();setTitle();const t=$('tn');if(t)t.value=ev.target.value;return}
