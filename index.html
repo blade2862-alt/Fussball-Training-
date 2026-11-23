@@ -40,7 +40,7 @@ ol li{margin:6px 0}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
 .tools{display:flex;gap:6px;flex-wrap:wrap}
 .tl{padding:6px 12px;font-size:14px}
-input[type=text],input[type=email],input[type=number],textarea,select{width:100%;background:var(--card);border:1.5px solid var(--bd);border-radius:10px;padding:10px 12px}
+input[type=text],input[type=email],input[type=password],input[type=number],textarea,select{width:100%;background:var(--card);border:1.5px solid var(--bd);border-radius:10px;padding:10px 12px}
 select{width:auto}
 input[type=number]{width:90px}
 textarea{margin-top:8px}
@@ -400,7 +400,10 @@ const ttApply=F=>{const mn=x=>{const [h,m]=x.split(':').map(Number);return h*60+
     P.src=F.id;P.color=F.color;P.start=F.start;P.end=F.end;P.total=mn(F.end)-mn(F.start);P.train=F.kind==='train';P.game=F.kind==='game';P.label=F.kind==='custom'?F.text.trim():'';P.place=F.place||'';P.rem=+F.rem||0;P.enote=F.note||'';n++}
   return n};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&view==='menu')render()});
-let regOpen='',regName='',regMail='',regMsg='',regKid='';let setSel='',setPin='',setMsg='',setPids=null,impData=null,impMsg='',expTxt='',impTxt='';
+let regOpen='',regName='',regMail='',regMsg='',regKid='',regPw='',regPw2='',lkVal='',lkMsg='',lkRst=false,unlocked=false;
+function pwh(p){let h1=0xdeadbeef,h2=0x41c6ce57;p='mT#'+p;for(let i=0;i<p.length;i++){const c=p.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)}
+function lockUI(){const o=document.getElementById('lockov');if(o)o.remove();if(!S.acct.pwh||unlocked)return;const d=document.createElement('div');d.id='lockov';d.className='regov';d.style.zIndex=99;d.style.background='var(--bg)';
+d.innerHTML=`<div class="regbox"><h3 style="margin:0 0 4px">meinTEAM</h3><p class="meta" style="margin:0 0 10px">${esc(S.acct.name||'')} · ${esc(ROLEL[S.acct.role]||'')}<br>Bitte gib dein Passwort ein.</p><input type="password" id="lkp" maxlength="8" placeholder="Passwort (8 Zeichen)" value="${esc(lkVal)}" autocomplete="current-password" style="width:100%;margin:4px 0">${lkMsg?`<p class="meta" style="color:#c0392b;font-weight:700;margin:6px 0">${esc(lkMsg)}</p>`:''}<button class="cta" data-lkok style="margin-top:8px">Entsperren</button>${lkRst?`<p class="meta" style="margin:10px 0 4px">Dein Account (Rolle, Name, Passwort) wird zurückgesetzt. Spieler und Termine bleiben erhalten.</p><button class="btn" data-lkreset2 style="width:100%">Ja, Account zurücksetzen</button>`:`<button class="btn" data-lkreset style="width:100%;margin-top:6px">Passwort vergessen?</button>`}</div>`;document.body.appendChild(d)}let setSel='',setPin='',setMsg='',setPids=null,impData=null,impMsg='',expTxt='',impTxt='';
 const parseBackup=txt=>{try{const o=JSON.parse(txt),D=o&&o.S;if(!D||typeof D!=='object'||!D.team)throw 0;const np=(D.team.players||[]).length,nc=Object.keys(D.cal||{}).length,ne=(D.mine||[]).length;impData={S:D,n:np+' Spieler, '+nc+' Kalendertage, '+ne+' eigene Übungen'+(o.date?' · Sicherung vom '+new Date(o.date).toLocaleDateString('de-DE'):'')};impMsg=''}catch(e){impData=null;impMsg='Das ist keine gültige meinTEAM-Sicherung.'}};
 const backupJson=()=>JSON.stringify({app:'meinTEAM',v:1,date:new Date().toISOString(),S});
 const PERM={player:['cal','plan','stat'],parent:['cal','stat']},ROLEL={trainer:'Trainer',player:'Spieler',parent:'Elternteil des Spielers'};
@@ -456,10 +459,10 @@ function board(ev,box){snap();
 function render(){
   const r=S.acct.role;
   if(!r)view='set';else if(r!=='trainer'&&view!=='menu'&&view!=='set'&&!can(view))view='menu';
-  render0();
+  render0();lockUI();
   const ro=r&&r!=='trainer';
   document.body.classList.toggle('ro',!!ro);
-  document.querySelectorAll('#main input,#main select,#main textarea,#club,#youth').forEach(e=>{e.disabled=!!ro&&e.id!=='acn'&&e.id!=='rgn'&&e.id!=='rgk'&&e.id!=='rgm'&&e.id!=='acpin'&&e.id!=='rsvwhy'});
+  document.querySelectorAll('#main input,#main select,#main textarea,#club,#youth').forEach(e=>{e.disabled=!!ro&&e.id!=='acn'&&e.id!=='rgn'&&e.id!=='rgp'&&e.id!=='rgp2'&&e.id!=='rgk'&&e.id!=='rgm'&&e.id!=='acpin'&&e.id!=='rsvwhy'});
 }
 function render0(){
   injectForms();cancelAnimationFrame(raf);ensureIds();
@@ -473,7 +476,7 @@ function render0(){
   }else if(view==='set'){
     const cur=setSel||S.acct.role,first=!S.acct.role,needPin=!!(S.acct.pin&&S.acct.role&&S.acct.role!=='trainer'&&(cur!==S.acct.role||setPids));
     const RL=[['trainer','Trainer','Sieht und bearbeitet alles'],['player','Spieler','Sieht Kalender, Trainingstage und Statistik'],['parent','Elternteil des Spielers','Sieht Kalender und Statistik']];
-    m.innerHTML=`<h2 style="font-size:32px">${first?'Account anlegen':'Einstellungen'}</h2><p class="meta">${first?'Lege zuerst deinen Account an, um die App zu nutzen.':'Wer benutzt diese App?'}</p><h3>Ich bin …</h3>${RL.map(([k,l,t])=>`<button type="button" class="rolb${cur===k?' on':''}" data-role="${k}"><b>${l}</b></button>`).join('')}${cur!=='trainer'?`${cur==='parent'?'<h3>Mein Kind</h3>':''}${(S.team.players||[]).length?`<div class="ttwd">${S.team.players.map(q=>`<button type="button" class="${(setPids||S.acct.pids||[]).includes(q.id)?'on':''}" data-mypl="${q.id}">${esc(q.name)}</button>`).join('')}</div><p class="meta">${cur==='parent'?'Du kannst mehrere Kinder wählen.':''}</p>`:'<p class="meta">Sobald Spieler in der Mannschaft angelegt sind, kannst du sie hier auswählen.</p>'}`:''}${(cur==='trainer'||needPin)?`<input type="password" inputmode="numeric" id="acpin" maxlength="4" placeholder="${S.acct.pin?(S.acct.role==='trainer'?'Neue PIN (leer = behalten)':'Trainer-PIN eingeben'):'Trainer-PIN festlegen (optional, 4 Ziffern)'}" value="${esc(setPin)}" style="width:100%;margin:6px 0">`:''}${setMsg?`<p class="meta" style="color:#c0392b;font-weight:700">${esc(setMsg)}</p>`:''}<button class="cta" data-acctsave>Speichern</button>${regOpen?`<div class="regov"><div class="regbox"><h3 style="margin:0 0 4px">${esc(ROLEL[regOpen]||'')}</h3><p class="meta" style="margin:0 0 10px">Trage deinen Namen und deine E-Mail-Adresse ein.</p><input type="text" id="rgn" placeholder="${regOpen==='trainer'?'Name des Trainers':regOpen==='player'?'Name des Spielers':'Name des Elternteils'}" value="${esc(regName)}" autocomplete="name" style="width:100%;margin:4px 0">${regOpen==='parent'?`<input type="text" id="rgk" placeholder="Name des Spielers" value="${esc(regKid)}" style="width:100%;margin:4px 0">`:''}<input type="email" id="rgm" placeholder="E-Mail-Adresse" value="${esc(regMail)}" autocomplete="email" inputmode="email" style="width:100%;margin:4px 0">${regMsg?`<p class="meta" style="color:#c0392b;font-weight:700;margin:6px 0">${esc(regMsg)}</p>`:''}<button class="cta" data-regok style="margin-top:8px">Registrieren</button><button class="btn" data-regno style="width:100%;margin-top:6px">Abbrechen</button></div></div>`:''}`;
+    m.innerHTML=`<h2 style="font-size:32px">${first?'Account anlegen':'Einstellungen'}</h2><p class="meta">${first?'Lege zuerst deinen Account an, um die App zu nutzen.':'Wer benutzt diese App?'}</p><h3>Ich bin …</h3>${RL.map(([k,l,t])=>`<button type="button" class="rolb${cur===k?' on':''}" data-role="${k}"><b>${l}</b></button>`).join('')}${cur!=='trainer'?`${cur==='parent'?'<h3>Mein Kind</h3>':''}${(S.team.players||[]).length?`<div class="ttwd">${S.team.players.map(q=>`<button type="button" class="${(setPids||S.acct.pids||[]).includes(q.id)?'on':''}" data-mypl="${q.id}">${esc(q.name)}</button>`).join('')}</div><p class="meta">${cur==='parent'?'Du kannst mehrere Kinder wählen.':''}</p>`:'<p class="meta">Sobald Spieler in der Mannschaft angelegt sind, kannst du sie hier auswählen.</p>'}`:''}${(cur==='trainer'||needPin)?`<input type="password" inputmode="numeric" id="acpin" maxlength="4" placeholder="${S.acct.pin?(S.acct.role==='trainer'?'Neue PIN (leer = behalten)':'Trainer-PIN eingeben'):'Trainer-PIN festlegen (optional, 4 Ziffern)'}" value="${esc(setPin)}" style="width:100%;margin:6px 0">`:''}${setMsg?`<p class="meta" style="color:#c0392b;font-weight:700">${esc(setMsg)}</p>`:''}<button class="cta" data-acctsave>Speichern</button>${regOpen?`<div class="regov"><div class="regbox"><h3 style="margin:0 0 4px">${esc(ROLEL[regOpen]||'')}</h3><p class="meta" style="margin:0 0 10px">Trage deinen Namen und deine E-Mail-Adresse ein.</p><input type="text" id="rgn" placeholder="${regOpen==='trainer'?'Name des Trainers':regOpen==='player'?'Name des Spielers':'Name des Elternteils'}" value="${esc(regName)}" autocomplete="name" style="width:100%;margin:4px 0">${regOpen==='parent'?`<input type="text" id="rgk" placeholder="Name des Spielers" value="${esc(regKid)}" style="width:100%;margin:4px 0">`:''}<input type="email" id="rgm" placeholder="E-Mail-Adresse" value="${esc(regMail)}" autocomplete="email" inputmode="email" style="width:100%;margin:4px 0"><input type="password" id="rgp" maxlength="8" placeholder="${S.acct.pwh?'Dein Passwort (8 Zeichen)':'Passwort festlegen (8 Zeichen)'}" value="${esc(regPw)}" autocomplete="new-password" style="width:100%;margin:4px 0">${S.acct.pwh?'':`<input type="password" id="rgp2" maxlength="8" placeholder="Passwort wiederholen" value="${esc(regPw2)}" autocomplete="new-password" style="width:100%;margin:4px 0">`}${regMsg?`<p class="meta" style="color:#c0392b;font-weight:700;margin:6px 0">${esc(regMsg)}</p>`:''}<button class="cta" data-regok style="margin-top:8px">Registrieren</button><button class="btn" data-regno style="width:100%;margin-top:6px">Abbrechen</button></div></div>`:''}`;
   }else if(view==='tt'){
     const T=S.tt,F=ttf,H5=Array.from({length:24},(_,i)=>pad2(i)),M5=Array.from({length:12},(_,i)=>pad2(i*5));
     const sel=(id,arr,v)=>`<select id="${id}">${arr.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('')}</select>`;
@@ -583,7 +586,7 @@ document.addEventListener('click',ev=>{
   const bx=ev.target.closest('.big.ed');if(bx&&view==='edit'){if(editNoClick){const dt=Date.now()-editNoClick;editNoClick=0;if(dt<60)return}board(ev,bx);return}
   if(crestMenu&&!ev.target.closest('.crestw')){crestMenu=false;setCrest()}
   if(!ev.target.closest('.skd'))document.querySelectorAll('.skl').forEach(x=>x.hidden=true);
-  const t=ev.target.closest('[data-regok],[data-regno],[data-go],[data-open],[data-new],[data-tool],[data-col],[data-rcol],[data-hcol],[data-ori],[data-play],[data-clearall],[data-calnav],[data-calday],[data-calmark],[data-dadd],[data-dup],[data-ddown],[data-ddel],[data-dpick],[data-dclear],[data-back],[data-captoggle],[data-nf],[data-nfedit],[data-nfsave],[data-nfdel],[data-crest],[data-crestnew],[data-crestdel],[data-photo],[data-pphotodel],[data-capset],[data-addtoggle],[data-datt],[data-dattall],[data-catopen],[data-catback],[data-undo],[data-save],[data-done],[data-edit],[data-copy],[data-del],[data-rm],[data-reset],[data-padd],[data-pg],[data-sk],[data-pedit],[data-pdel],[data-pcancel],[data-tsave],[data-ladd],[data-lres],[data-lrem],[data-lclr],[data-role],[data-acctsave],[data-ttnew],[data-ttedit],[data-ttdel],[data-ttcancel],[data-ttsave],[data-ttkind],[data-ttcol],[data-ttwd],[data-reload],[data-phcam],[data-phgal],[data-phdel],[data-phno],[data-export],[data-expcopy],[data-imppaste],[data-import],[data-impok],[data-impno],[data-skopen],[data-ttrep],[data-ttrem],[data-evedit],[data-evdel],[data-rsvp],[data-rsvpok],[data-rsvpcancel],[data-mypl]');if(!t)return;
+  const t=ev.target.closest('[data-lkok],[data-lkreset],[data-lkreset2],[data-regok],[data-regno],[data-go],[data-open],[data-new],[data-tool],[data-col],[data-rcol],[data-hcol],[data-ori],[data-play],[data-clearall],[data-calnav],[data-calday],[data-calmark],[data-dadd],[data-dup],[data-ddown],[data-ddel],[data-dpick],[data-dclear],[data-back],[data-captoggle],[data-nf],[data-nfedit],[data-nfsave],[data-nfdel],[data-crest],[data-crestnew],[data-crestdel],[data-photo],[data-pphotodel],[data-capset],[data-addtoggle],[data-datt],[data-dattall],[data-catopen],[data-catback],[data-undo],[data-save],[data-done],[data-edit],[data-copy],[data-del],[data-rm],[data-reset],[data-padd],[data-pg],[data-sk],[data-pedit],[data-pdel],[data-pcancel],[data-tsave],[data-ladd],[data-lres],[data-lrem],[data-lclr],[data-role],[data-acctsave],[data-ttnew],[data-ttedit],[data-ttdel],[data-ttcancel],[data-ttsave],[data-ttkind],[data-ttcol],[data-ttwd],[data-reload],[data-phcam],[data-phgal],[data-phdel],[data-phno],[data-export],[data-expcopy],[data-imppaste],[data-import],[data-impok],[data-impno],[data-skopen],[data-ttrep],[data-ttrem],[data-evedit],[data-evdel],[data-rsvp],[data-rsvpok],[data-rsvpcancel],[data-mypl]');if(!t)return;
   const d=t.dataset;
   if('ttnew' in d){const y=now0.getMonth()>=10?now0.getFullYear()+1:now0.getFullYear();ttf={id:'',kind:'train',text:'',start:'17:30',end:'19:00',color:'green',days:[0,0,0,0,0,0,0],from:kOf(now0),to:y+'-12-31',skip:true,rep:'w',rem:0,place:'',note:''};setMsg='';render();return}
   if('ttedit' in d){const e=S.tt.ev.find(x=>x.id===d.ttedit);if(e){ttf=Object.assign({rep:'w',rem:0,place:'',note:'',from:kOf(now0)},JSON.parse(JSON.stringify(e)));setMsg='';render()}return}
@@ -627,13 +630,19 @@ document.addEventListener('click',ev=>{
     else{P.rsvp[id]=P.rsvp[id]===v?'':v}
     rsvpAsk='';if(P.rsvp[id]!=='no')delete P.why[id];
     if(!P.rsvp[id])delete P.rsvp[id];save();render();return}
+  if('lkok' in d){if(pwh(lkVal)===S.acct.pwh){unlocked=true;lkVal='';lkMsg='';lkRst=false;render()}else{lkMsg='Falsches Passwort.';lkVal='';render()}return}
+  if('lkreset' in d){lkRst=true;render();return}
+  if('lkreset2' in d){delete S.acct.pwh;S.acct.role='';S.acct.pids=[];S.acct.pin='';unlocked=false;lkRst=false;lkVal='';lkMsg='';save();render();return}
   if('regno' in d){regOpen='';regMsg='';render();return}
   if('regok' in d){const nm=regName.trim(),ml=regMail.trim();
     if(!nm){regMsg=regOpen==='trainer'?'Bitte gib den Namen des Trainers ein.':regOpen==='player'?'Bitte gib den Namen des Spielers ein.':'Bitte gib den Namen des Elternteils ein.';render();return}
     if(regOpen==='parent'&&!regKid.trim()){regMsg='Bitte gib den Namen des Spielers ein.';render();return}
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(ml)){regMsg='Bitte gib eine gültige E-Mail-Adresse ein.';render();return}
+    if(S.acct.pwh){if(pwh(regPw)!==S.acct.pwh){regMsg='Falsches Passwort.';render();return}}
+    else{if(regPw.length!==8){regMsg='Das Passwort muss genau 8 Zeichen haben.';render();return}if(regPw!==regPw2){regMsg='Die Passwörter stimmen nicht überein.';render();return}S.acct.pwh=pwh(regPw);unlocked=true}
+    regPw='';regPw2='';
     S.acct.name=nm;S.acct.email=ml;S.acct.kid=regOpen==='parent'?regKid.trim():'';setSel=regOpen;regOpen='';regMsg='';setMsg='';save();render();return}
-  if('role' in d){regOpen=d.role;regName=S.acct.name||'';regKid=S.acct.kid||'';regMail=S.acct.email||'';regMsg='';render();return}
+  if('role' in d){regOpen=d.role;regName=S.acct.name||'';regKid=S.acct.kid||'';regMail=S.acct.email||'';regPw='';regPw2='';regMsg='';render();return}
   if('acctsave' in d){const a=S.acct,sel=setSel||a.role;
     if(!sel){setMsg='Bitte wähle deine Rolle.';render();return}
     let pids=(setPids||a.pids||[]).slice();if(sel==='player')pids=pids.slice(0,1);if(sel==='trainer')pids=[];
@@ -753,6 +762,9 @@ document.addEventListener('input',ev=>{if(ev.target.id==='nfname'){nfname=ev.tar
   if(ev.target.id==='rsvwhy'){rsvpTxt=ev.target.value;return}
   if(ev.target.id==='impt'){impTxt=ev.target.value;return}
   if(ev.target.id==='acn'){S.acct.name=ev.target.value;save();return}
+  if(ev.target.id==='lkp'){lkVal=ev.target.value;return}
+  if(ev.target.id==='rgp'){regPw=ev.target.value;return}
+  if(ev.target.id==='rgp2'){regPw2=ev.target.value;return}
   if(ev.target.id==='rgn'){regName=ev.target.value;return}
   if(ev.target.id==='rgk'){regKid=ev.target.value;return}
   if(ev.target.id==='rgm'){regMail=ev.target.value;return}
